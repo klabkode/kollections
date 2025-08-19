@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Khelp...</title>
+    <link rel="icon" href="favicon.ico" type="image/png">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href='https://fonts.googleapis.com/css?family=Anta' rel='stylesheet'>
+    <link href='https://fonts.googleapis.com/css?family=Roboto' rel='stylesheet'>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.5.1/styles/github-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.5.1/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/markdown-it/12.3.2/markdown-it.min.js"></script>
+    <style>
+        :root {
+            --bg-color: #121212;
+            --text-color: #ffffff;
+            --hover-color: #333;
+            --border-color: #333;
+            --breadcrumb-separator: gray;
+            --breadcrumb-bg-color: #212121;
+            --breadcrumb-border-color: gray;
+        }
+
+        body {
+            margin: 10px;
+            color: var(--text-color);
+            font-family: 'Roboto';
+            font-size: 14px;
+            background-color: var(--bg-color);
+        }
+
+        .banner {
+            width: 100%;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            background-color: var(--bg-color);
+            align-items: center;
+        }
+
+        .mobile-only {
+            display: block;
+        }
+
+        @media (min-width: 768px) {
+            .mobile-only {
+                display: none;
+            }
+        }
+
+        h1 {
+            margin: 5px;
+            padding-top: 10px;
+            padding-bottom: 10px;
+        }
+
+        pre {
+            border: 1px solid var(--border-color);
+            background-color: var(--hover-color);
+        }
+
+        .breadcrumb-container {
+            top: 0;
+            z-index: 1000;
+            padding: 10px;
+            overflow-x: auto;
+            position: sticky;
+            white-space: nowrap;
+            background-color: var(--breadcrumb-bg-color);
+            border-top: 1px solid var(--breadcrumb-border-color);
+            border-bottom: 1px solid var(--breadcrumb-border-color);
+        }
+
+        .breadcrumb-container::-webkit-scrollbar {
+            display: none;
+        }
+
+        .breadcrumb {
+            display: inline-block;
+        }
+
+        .breadcrumb span {
+            font-size: 18px;
+            color: var(--text-color);
+        }
+
+        .breadcrumb span+span::before {
+            content: '/';
+            padding: 0 5px;
+            color: var(--breadcrumb-separator);
+        }
+
+        /* For thin scroll bars */
+        /* Chrome, Edge, Safari */
+        ::-webkit-scrollbar {
+            width: 3px;
+            height: 3px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background-color: #555;
+            border-radius: 5px;
+        }
+
+        /* Firefox */
+        * {
+            scrollbar-width: thin;
+            scrollbar-color: #555 transparent;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="banner">
+        <h1 class="mobile-only" style="font-family: 'Anta';font-size: 35px; font-weight: normal;">Khelp...</h1>
+
+        <div class="breadcrumb-container">
+            <nav class="breadcrumb" id="breadcrumb">
+                <!-- Breadcrumb path will be inserted here -->
+            </nav>
+        </div>
+    </div>
+
+    <div id="fileContent">Loading...</div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const urlParams = new URLSearchParams(window.location.search);
+            const filePath = urlParams.get('file');
+
+            function createBreadcrumb(path) {
+                const breadcrumbNav = document.getElementById('breadcrumb');
+                const pathParts = path.split('/');
+                breadcrumbNav.innerHTML = '';
+
+                pathParts.slice(1).forEach((part) => {
+                    const span = document.createElement('span');
+                    span.textContent = part;
+                    breadcrumbNav.appendChild(span);
+                });
+            }
+
+            if (filePath) {
+                createBreadcrumb(filePath);
+
+                fetch("../" + filePath)
+                    .then(response => response.text())
+                    .then(content => {
+                        const fileContentDiv = document.getElementById('fileContent');
+                        fileContentDiv.innerHTML = '';
+
+                        if (filePath.endsWith('.md')) {
+                            const md = window.markdownit();
+                            fileContentDiv.innerHTML = md.render(content);
+                        } else {
+                            const pre = document.createElement('pre');
+                            const code = document.createElement('code');
+                            code.textContent = content;
+                            pre.appendChild(code);
+                            fileContentDiv.appendChild(pre);
+                        }
+
+                        hljs.highlightAll();
+                    })
+                    .catch(error => {
+                        document.getElementById('fileContent').textContent = 'Error loading file content.';
+                        console.error('Error fetching file:', error);
+                    });
+            } else {
+                document.getElementById('fileContent').textContent = '';
+            }
+        });
+    </script>
+</body>
+
+</html>
+

@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Xplore...</title>
+    <link rel="icon" href="favicon.ico" type="image/png">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.5.1/styles/github-dark.min.css">
+    <style>
+        :root {
+            --bg-color: #121212;
+            --text-color: #ffffff;
+            --secondary-color: #ffffff;
+            --hover-color: #333;
+            --border-color: #333;
+        }
+
+        body {
+            margin: 10px;
+            color: var(--text-color);
+            font-family: 'Arial', sans-serif;
+            background-color: var(--bg-color);
+        }
+
+        .file-path {
+            margin-bottom: 10px;
+            color: var(--secondary-color);
+        }
+
+        pre {
+            border: 1px solid var(--border-color);
+            background-color: var(--hover-color);
+        }
+
+        .media-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            margin: 10px 0;
+        }
+
+        .media {
+            width: 100%;
+            max-width: 800px;
+        }
+
+        img,
+        video,
+        audio {
+            max-width: 100%;
+            height: auto;
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="file-path" id="filePath">File: Loading...</div>
+    <div id="fileContent">Loading...</div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.10.377/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.5.1/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/markdown-it/12.3.2/markdown-it.min.js"></script>
+    <script>
+        const params = new URLSearchParams(window.location.search);
+        const path = params.get('path');
+
+        // Display the file path
+        document.getElementById('filePath').innerText = `File: ${decodeURIComponent(path)}`;
+
+        fetch(`/api/file?path=${encodeURIComponent(path)}`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                } else if (response.status === 250) {
+                    // Sleep 1 second
+                    setTimeout(() => {
+                        window.close();
+                    }, 1000);
+                }
+                console.log(`File=${path}`);
+                return response.blob();
+            })
+            .then(content => {
+                console.log(`Content=${content}`);
+
+                // Determine the file extension
+                const fileExtension = path.split('.').pop().toLowerCase();
+
+                // File type categories
+                const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'svg', 'webp'];
+                const audioExtensions = ['mp3', 'wav', 'ogg', 'aac', 'flac', 'm4a'];
+                const videoExtensions = ['mp4', 'webm', 'ogg', 'avi', 'mkv'];
+                const xdumpExtensions = ['db', 'o', 'swp', 'bin', 'so', 'out', 'core', 'gpg', 'lock', 'kbx', 'pk', 'lsa', 'lsv'];
+                const pdfExtensions = ['pdf'];
+                const docxExtensions = ['doc', 'docx'];
+                const mdfileExtensions = ['md'];
+
+                // Check if the file is an image
+                if (imageExtensions.includes(fileExtension)) {
+                    const imgElement = document.createElement('img');
+                    imgElement.src = URL.createObjectURL(content);
+                    imgElement.alt = `Image: ${decodeURIComponent(path)}`;
+                    document.getElementById('fileContent').innerHTML = '';
+                    document.getElementById('fileContent').appendChild(imgElement);
+                    console.log(imgElement);
+                } else if (audioExtensions.includes(fileExtension)) {
+                    const audioContainer = document.createElement('div');
+                    audioContainer.className = 'media-container';
+
+                    const audioElement = document.createElement('audio');
+                    audioElement.controls = true;
+                    audioElement.autoplay = true;
+                    audioElement.className = 'media';
+                    const audioUrl = URL.createObjectURL(content);
+                    audioElement.src = audioUrl;
+                    audioElement.load();
+
+                    audioElement.onerror = () => {
+                        console.error('Error loading audio:', audioElement.src);
+                        document.getElementById('fileContent').innerHTML = 'Error loading audio.';
+                    };
+
+                    audioContainer.appendChild(audioElement);
+                    document.getElementById('fileContent').innerHTML = '';
+                    document.getElementById('fileContent').appendChild(audioContainer);
+                    console.log('Audio URL:', audioUrl);
+                } else if (videoExtensions.includes(fileExtension)) {
+                    const videoContainer = document.createElement('div');
+                    videoContainer.className = 'media-container';
+
+                    const videoElement = document.createElement('video');
+                    videoElement.controls = true;
+                    videoElement.autoplay = true;
+                    videoElement.className = 'media';
+                    const videoUrl = URL.createObjectURL(content);
+                    videoElement.src = videoUrl;
+
+                    // Error handling for video
+                    videoElement.onerror = () => {
+                        console.error('Error loading video:', videoElement.src);
+                        document.getElementById('fileContent').innerHTML = 'Error loading video.';
+                    };
+
+                    videoContainer.appendChild(videoElement);
+                    document.getElementById('fileContent').innerHTML = '';
+                    document.getElementById('fileContent').appendChild(videoContainer);
+                    console.log('Video URL:', videoUrl);
+                } else if (fileExtension === 'html') {
+                    // Convert blob to text for HTML files
+                    return content.text().then(htmlContent => {
+                        const escapedContent = escapeHtml(htmlContent); // Escape HTML special characters
+                        document.getElementById('fileContent').innerHTML = `<pre><code>${escapedContent}</code></pre>`;
+                        hljs.highlightAll();
+                    });
+                } else if (docxExtensions.includes(fileExtension)) {
+                    console.log(`RecvContent=${content.text()}`);
+                    content.text().then(text => {
+                        document.getElementById('fileContent').innerHTML = text;
+                    }).catch(err => {
+                        fileContentElement.innerHTML = 'Error viewing DOCX file.';
+                        console.error('Error processing DOCX file:', err);
+                    });
+                } else if (mdfileExtensions.includes(fileExtension)) {
+                    console.log(`RecvContent=${content.text()}`);
+                    // Handle Markdown files using markdown-it
+                    content.text().then(markdownContent => {
+                        // Create markdown-it instance
+                        const md = markdownit();
+                        const convertedHTML = md.render(markdownContent);
+
+                        // Display the converted HTML
+                        document.getElementById('fileContent').innerHTML = convertedHTML;
+                        hljs.highlightAll();
+                    }).catch(err => {
+                        document.getElementById('fileContent').innerHTML = 'Error displaying Markdown file.';
+                        console.error('Error processing Markdown file:', err);
+                    });
+
+                } else if (pdfExtensions.includes(fileExtension)) {
+                    renderPDF(content);
+                } else if (xdumpExtensions.includes(fileExtension)) {
+                    // Do hexdump for xdumpExtensions
+                    createHexDump(content);
+                } else {
+                    // For other text files, convert blob to text
+                    return content.text().then(textContent => {
+                        document.getElementById('fileContent').innerHTML = `<pre><code class="${fileExtension}">${textContent}</code></pre>`;
+                        hljs.highlightAll(); // Apply syntax highlighting
+                    });
+                }
+            })
+            .catch(err => {
+                document.getElementById('fileContent').innerHTML = 'Error viewing file: ' + err.message;
+            });
+
+        // Function to render the PDF
+        function renderPDF(blob) {
+            // Convert Blob to ArrayBuffer
+            const reader = new FileReader();
+
+            reader.onload = function (event) {
+                const arrayBuffer = event.target.result;
+
+                const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
+                loadingTask.promise.then(pdf => {
+                    //console.log('PDF loaded');
+                    const pdfViewer = document.getElementById('fileContent');
+                    pdfViewer.innerHTML = ''; // Clear the previous content
+
+                    // Render all pages
+                    for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+                        pdf.getPage(pageNum).then(page => {
+                            //console.log(`Page ${pageNum} loaded`);
+
+                            const scale = 1.5;
+                            const viewport = page.getViewport({ scale });
+
+                            // Prepare canvas using PDF page dimensions
+                            const canvas = document.createElement('canvas');
+                            const context = canvas.getContext('2d');
+                            canvas.height = viewport.height;
+                            canvas.width = viewport.width;
+
+                            // Render PDF page into canvas context
+                            const renderContext = {
+                                canvasContext: context,
+                                viewport: viewport,
+                            };
+                            page.render(renderContext).promise.then(() => {
+                                //console.log(`Page ${pageNum} rendered`);
+                            });
+
+                            // Append the canvas to the viewer
+                            pdfViewer.appendChild(canvas);
+                        });
+                    }
+                }, reason => {
+                    console.error(reason);
+                });
+            };
+
+            reader.readAsArrayBuffer(blob); // Convert Blob to ArrayBuffer
+        }
+
+        // Function to create a hex dump from a Blob
+        function createHexDump(blob) {
+            const reader = new FileReader();
+            reader.onload = function (event) {
+                const arrayBuffer = event.target.result;
+                const byteArray = new Uint8Array(arrayBuffer);
+                const hexLines = [];
+
+                for (let i = 0; i < byteArray.length; i += 16) {
+                    const hexPart = [];
+                    const asciiPart = [];
+                    for (let j = 0; j < 16; j++) {
+                        if (i + j < byteArray.length) {
+                            const byte = byteArray[i + j];
+                            hexPart.push(byte.toString(16).padStart(2, '0')); // Hex representation
+                            asciiPart.push(byte >= 32 && byte < 127 ? String.fromCharCode(byte) : '.'); // ASCII representation
+                        } else {
+                            hexPart.push('  '); // Padding for incomplete lines
+                            asciiPart.push(' ');
+                        }
+                    }
+                    hexLines.push(`${(i).toString(8).padStart(7, '0')}  ${hexPart.join(' ')}  |${asciiPart.join('')}|`);
+                }
+
+                document.getElementById('fileContent').innerHTML = `<pre>${hexLines.join('\n')}</pre>`;
+            };
+            reader.readAsArrayBuffer(blob); // Read blob as ArrayBuffer
+        }
+
+        // Function to escape HTML special characters
+        function escapeHtml(htmlFile) {
+            return htmlFile
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+    </script>
+</body>
+
+</html>

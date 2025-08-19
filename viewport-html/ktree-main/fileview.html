@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <link rel="icon" type="image/png" href="__ktree/favicon.png">
+    <title>Loading...</title>
+    <link id="theme-css" rel="stylesheet" href="res/github-dark.min.css"
+        onerror="console.warn('[WARNING] CSS not found: res/github-dark.min.css');">
+    <script id="highlight-js" src="res/js/highlight.min.js"
+        onerror="console.warn('[WARNING] JS not found: res/js/highlight.min.js');"></script>
+    <script src="res/js/pdf.min.js"></script>
+    <script src="res/js/markdown-it.min.js"></script>
+    <style>
+        :root {
+            --bg-color: #121212;
+            --text-color: #ffffff;
+            --border-color: #333;
+            --padding: 5px;
+        }
+
+        body {
+            margin: 0;
+            padding: var(--padding);
+            color: var(--text-color);
+            background-color: var(--bg-color);
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        #filePath {
+            font-weight: bold;
+            padding: 10px 0;
+            word-wrap: break-word;
+        }
+
+        #fileContent {
+            width: 100%;
+            white-space: pre-wrap;
+            overflow-wrap: break-word;
+            padding: 0;
+        }
+
+        .media-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            height: 90vh;
+        }
+
+        img,
+        video,
+        audio {
+            max-width: 90vw;
+            max-height: 90vh;
+            margin-top: 20px;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="filePath">Loading...</div>
+    <div id="fileContent">Loading...</div>
+
+    <script>
+        function getQueryParam(param) {
+            let urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get(param);
+        }
+
+        let filePath = getQueryParam("file");
+
+        if (filePath) {
+            let fileUrl = `/${filePath}`;
+            document.title = "Ktree: " + filePath;
+            document.getElementById("filePath").innerText = "📄 " + filePath;
+
+            if (filePath.match(/\.(png|jpe?g|gif|webp)$/i)) {
+                document.getElementById("fileContent").innerHTML = `<div class="media-container"><img src="${fileUrl}"></div>`;
+            } else if (filePath.match(/\.(mp4|webm|ogg|mov|heic)$/i)) {
+                document.getElementById("fileContent").innerHTML = `<div class="media-container"><video src="${fileUrl}" controls></video></div>`;
+            } else if (filePath.match(/\.(mp3|wav)$/i)) {
+                document.getElementById("fileContent").innerHTML = `<div class="media-container"><audio src="${fileUrl}" controls></audio></div>`;
+            } else if (filePath.match(/\.pdf$/i)) {
+                renderPDF(fileUrl);
+            } else if (filePath.match(/\.md$/i)) {
+                fetch(fileUrl)
+                    .then(response => response.text())
+                    .then(text => {
+                        let md = markdownit();
+                        document.getElementById("fileContent").innerHTML = md.render(text);
+                        hljs.highlightAll();
+                    })
+                    .catch(error => {
+                        document.getElementById("fileContent").innerText = "Error loading file";
+                    });
+            } else {
+                fetch(fileUrl)
+                    .then(response => response.arrayBuffer())
+                    .then(buffer => {
+                        if (filePath.match(/\.(db|o|swp|bin|so|out|core|gpg|lock|kbx|pk|lsa|lsv)$/i)) {
+                            createHexDump(new Uint8Array(buffer));
+                        } else {
+                            let text = new TextDecoder().decode(buffer);
+                            let escapedText = text.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+                            document.getElementById("fileContent").innerHTML = `<pre><code class="language-c">${escapedText}</code></pre>`;
+                            hljs.highlightAll();
+                        }
+                    })
+                    .catch(error => {
+                        document.getElementById("fileContent").innerText = "Error loading file";
+                    });
+            }
+        }
+
+        function renderPDF(url) {
+            pdfjsLib.getDocument(url).promise.then(pdf => {
+                let container = document.getElementById("fileContent");
+                container.innerHTML = "";
+                for (let i = 1; i <= pdf.numPages; i++) {
+                    pdf.getPage(i).then(page => {
+                        let scale = 1.5;
+                        let viewport = page.getViewport({ scale });
+                        let canvas = document.createElement("canvas");
+                        let context = canvas.getContext("2d");
+                        canvas.height = viewport.height;
+                        canvas.width = viewport.width;
+                        page.render({ canvasContext: context, viewport: viewport });
+                        container.appendChild(canvas);
+                    });
+                }
+            }).catch(error => {
+                document.getElementById("fileContent").innerText = "Error loading PDF";
+            });
+        }
+
+        function createHexDump(byteArray) {
+            let hexLines = [];
+            for (let i = 0; i < byteArray.length; i += 16) {
+                let hexPart = [];
+                let asciiPart = [];
+                for (let j = 0; j < 16; j++) {
+                    if (i + j < byteArray.length) {
+                        let byte = byteArray[i + j];
+                        hexPart.push(byte.toString(16).padStart(2, '0'));
+                        asciiPart.push(byte >= 32 && byte < 127 ? String.fromCharCode(byte) : '.');
+                    } else {
+                        hexPart.push('  ');
+                        asciiPart.push(' ');
+                    }
+                }
+                hexLines.push(`${(i).toString(8).padStart(7, '0')}  ${hexPart.join(' ')}  |${asciiPart.join('')}|`);
+            }
+            document.getElementById("fileContent").innerHTML = `<pre>${hexLines.join('\n')}</pre>`;
+        }
+    </script>
+</body>
+
+</html>

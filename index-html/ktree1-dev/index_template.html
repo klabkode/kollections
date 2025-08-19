@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Xplore</title>
+  <meta name='robots' content='noindex,nofollow'/>
+  <meta http-equiv='Content-Style-Type' content='text/css'/>
+
+  <link rel='stylesheet' type='text/css' href='res/style.css'/>
+  <link rel='stylesheet' type='text/css' href='res/js/jquery.treeview.css' />
+
+  <script type='text/javascript' src='res/js/jquery.js'></script>
+  <script type='text/javascript' src='res/js/jquery.treeview.js'></script>
+
+  <script type='text/javascript'>
+      function openFile(event, filePath) {
+          event.preventDefault();
+          console.log("[DEBUG] Opening file: " + filePath);
+          parent.frames["main"].location.href = "fileview.html?file=" + encodeURIComponent(filePath);
+      }
+
+      $(function() {
+          $('#tree').treeview({
+              animated: 100,
+              collapsed: true,
+              unique: false,
+              control: '#control'
+          });
+          $('#init').text('');
+      });
+  </script>
+</head>
+<body>
+    <h2>Xplore:</h2>
+    <div id='control'><a href='#'>Collapse</a> | <a href='#'>Expand</a></div>
+    <ul id='tree' class='filetree'>
+        {file_tree}
+    </ul>
+</body>
+</html>

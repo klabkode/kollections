@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Loading...</title>
+    <link id="theme-css" rel="stylesheet" href="res/github-dark.min.css" onerror="console.warn('[WARNING] CSS not found: res/github-dark.min.css');">
+	<script id="highlight-js" src="res/js/highlight.min.js" onerror="console.warn('[WARNING] JS not found: res/js/highlight.min.js');"></script>
+    <style>
+        :root {
+            --bg-color: #121212;
+            --text-color: #ffffff;
+            --border-color: #333;
+            --padding: 5px;
+        }
+
+        body {
+            margin: 0;
+            padding: var(--padding);
+            color: var(--text-color);
+            font-family: monospace;
+            background-color: var(--bg-color);
+        }
+
+        #filePath {
+            font-weight: bold;
+            padding: 10px 0;
+            word-wrap: break-word;
+        }
+
+        #fileContent {
+            width: 100%;
+            white-space: pre-wrap;
+            overflow-wrap: break-word;
+            padding: 0;
+        }
+
+        .media-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            height: 90vh;
+        }
+
+        img, video, audio {
+            max-width: 90vw;
+            max-height: 90vh;
+            margin-top: 20px;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div id="filePath">Loading...</div>
+    <div id="fileContent">Loading...</div>
+
+    <script>
+        function getQueryParam(param) {
+            let urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get(param);
+        }
+
+        let filePath = getQueryParam("file");
+
+        if (filePath) {
+            let fileUrl = `/${filePath}`;  // Adjusted to absolute file paths
+            document.title = "File: " + filePath;
+            document.getElementById("filePath").innerText = "File: " + filePath;
+
+            if (filePath.match(/\.(png|jpe?g|gif|webp)$/i)) {
+                document.getElementById("fileContent").innerHTML = `<div class="media-container"><img src="${fileUrl}"></div>`;
+            } else if (filePath.match(/\.(mp4|webm|ogg|mov|heic)$/i)) {
+                document.getElementById("fileContent").innerHTML = `<div class="media-container"><video src="${fileUrl}" controls></video></div>`;
+            } else if (filePath.match(/\.(mp3|wav)$/i)) {
+                document.getElementById("fileContent").innerHTML = `<div class="media-container"><audio src="${fileUrl}" controls></audio></div>`;
+            } else {
+                fetch(fileUrl)
+                    .then(response => response.text())
+                    .then(text => {
+                        let codeBlock = `<pre><code class="plaintext">${text}</code></pre>`;
+                        document.getElementById("fileContent").innerHTML = codeBlock;
+                        hljs.highlightAll();
+                    })
+                    .catch(error => {
+                        document.getElementById("fileContent").innerText = "Error loading file";
+                    });
+            }
+        }
+    </script>
+</body>
+</html>

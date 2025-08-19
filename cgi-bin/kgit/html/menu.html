@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<title>Menu</title>
+		<style>
+			body {
+				margin: 0;
+				padding: 0;
+				background-color: #e0eaee;
+			}
+			#menu {
+				flex-grow: 1;
+				padding: 10px;
+				font-family: Arial;
+			}
+			#container {
+				display: flex;
+				font-family: Arial;
+			}
+			#left-frame {
+				width: 200px;
+				padding: 5px;
+				box-sizing: border-box;
+			}
+			ul {
+				list-style-type: none;
+				padding: 0;
+				margin: 0;
+			}
+			li {
+				padding: 8px;
+				cursor: pointer;
+			}
+			li:hover {
+				background-color: #ddd;
+			}
+			.active {
+				background-color: #4CAF50;
+				color: white;
+			}
+		</style>
+	</head>
+	<body>
+		<h1 id=menu>KGit</h1>
+		<hr>
+		<div id="container">
+			<div id="left-frame">
+				<ul>
+					<li onclick="loadContent(this)"><a href='kgit.cgi?page=viewport&task=overview' target='main'>Overview</a></li>
+					<li onclick="loadContent(this)"><a href='kgit.cgi?page=viewport&task=staged' target='main'>Staged Files</a></li>
+					<li onclick="loadContent(this)"><a href='kgit.cgi?page=viewport&task=unstaged' target='main'>Unstaged Files</a></li>
+					<li onclick="loadContent(this)"><a href='kgit.cgi?page=viewport&task=history' target='main'>Commit History</a></li>
+				</ul>
+			</div>
+		</div>
+
+		<script>
+			function loadContent(clickedElement) {
+				// Remove 'active' class from all list items
+				var listItems = document.querySelectorAll('#left-frame li');
+				listItems.forEach(function(item) {
+					item.classList.remove('active');
+				});
+
+				// Add 'active' class to the clicked list item
+				clickedElement.classList.add('active');
+			}
+		</script>
+	</body>
+</html>

@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<head>
+  <title>Xplore</title>
+  <meta name='robots' content='noindex,nofollow'/>
+  <meta http-equiv='Content-Style-Type' content='text/css'/>
+  <link rel='stylesheet' type='text/css' href='@__HTMLROOT__@/style.css'/>
+  <link rel='stylesheet' href='@__HTMLROOT__@/js/jquery.treeview.css' />
+  <script type='text/javascript' src='@__HTMLROOT__@/js/jquery.js'></script>
+  <script type='text/javascript' src='@__HTMLROOT__@/js/jquery.treeview.js'></script>
+  <script type='text/javascript'>
+    $(function() {
+      $('#tree').treeview({
+        animated: 100,
+        collapsed: true,
+        unique: false,
+        control: '#control'
+      });
+      $('#init').text('');
+    });
+  </script>
+</head>

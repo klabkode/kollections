@@ -1,0 +1,8 @@
+<!DOCTYPE html>
+<head>
+  <title>Xplore</title>
+  <meta name='robots' content='noindex,nofollow'/>
+  <meta http-equiv='Content-Style-Type' content='text/css'/>
+  <link rel='stylesheet' type='text/css' href='@__HTMLROOT__@/style.css'/>
+  <link rel='stylesheet' href='@__HTMLROOT__@/js/jquery.treeview.css' />
+</head>

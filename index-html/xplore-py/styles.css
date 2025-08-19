@@ -1,0 +1,117 @@
+:root {
+    --bg-color:  #121212;;
+    --text-color: #ffffff;
+    --secondary-color: #ffffff;
+    --hover-color: #333;
+    --border-color: #333;
+    --breadcrumb-separator: grey;
+    --breadcrumb-color: lightgray;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    color: var(--text-color);
+    font-family: 'Arial', sans-serif;
+    background-color: var(--bg-color);
+}
+
+h1 {
+    margin: 5px;
+}
+
+.header {
+    display: flex;
+    font-size: 1.2em;
+    flex-direction: column;
+    align-items: flex-start;
+    background-color: var(--bg-color);
+}
+
+.disk-usage {
+    margin: 10px;
+    display: flex;
+    font-size: 0.8em;
+    color: lightslategray;
+}
+
+#disk-usage {
+    font-size: 1em;
+    margin-right: 10px;
+}
+
+#file-manager {
+    padding: 15px;
+}
+
+.directory-list {
+    display: flex;
+    flex-direction: column;
+}
+
+.file-item {
+    display: flex;
+    padding: 10px;
+    align-items: center;
+    color: var(--text-color);
+    transition: background-color 0.3s ease;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.file-item:hover {
+    background-color: var(--hover-color);
+}
+
+.file-icon {
+    width: 40px;
+    height: 40px;
+    margin-right: 15px;
+}
+
+.file-details {
+    flex-grow: 1;
+}
+
+.file-name {
+    font-size: 1.1em;
+    color: var(--secondary-color);
+}
+
+.file-meta {
+    margin-top: 5px;
+    font-size: 0.9em;
+    color: slategrey;
+    font-family: monospace;
+}
+
+.breadcrumb-container {
+    top: 0;
+    z-index: 1000;
+    padding: 10px;
+    overflow-x: auto;
+    position: sticky;
+    white-space: nowrap;
+    background-color: var(--bg-color);
+    border-top: 1px solid var(--breadcrumb-separator);
+    border-bottom: 1px solid var(--breadcrumb-separator);
+}
+
+.breadcrumb-container::-webkit-scrollbar {
+    display: none;
+}
+
+.breadcrumb {
+    display: inline-block;
+}
+
+.breadcrumb a {
+    font-size: 18px;
+    text-decoration: none;
+    color: var(--breadcrumb-color);
+}
+
+.breadcrumb a + a::before {
+    content: '/';
+    padding: 0 5px;
+    color: var(--breadcrumb-separator);
+}

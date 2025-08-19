@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <title>{{ TITLE_NAME }}</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📘</text></svg>">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/github-markdown-css@5.5.1/github-markdown-dark.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css" />
+  <style>
+    :root{
+      --bg: #0d1117;
+      --panel: #161b22;
+      --muted: #8b949e;
+      --accent: #58a6ff;
+      --text: #c9d1d9;
+    }
+    body{
+      margin:0;
+      font-family: 'Roboto', sans-serif;
+      color: var(--text);
+      background: var(--bg);
+      display:flex;
+      height:100vh;
+      flex-direction:row;
+    }
+
+    .layout { display:flex; width:100%; height:100%; }
+
+    /* Sidebar */
+    #sidebar {
+      width: 22vw;
+      min-width: 260px;
+      max-width: 380px;
+      background: var(--panel);
+      border-right:1px solid #30363d;
+      display:flex;
+      flex-direction:column;
+      overflow:hidden;
+    }
+
+    /* header/banner + search */
+    .banner {
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding:12px;
+      position:sticky;
+      top:0;
+      background:var(--panel);
+      z-index:100;
+      border-bottom:1px solid #222;
+    }
+    .banner h1{
+      margin:0;
+      font-size:20px;
+      color:var(--accent);
+      cursor:pointer;
+    }
+    .search { flex:1; margin-left:12px; max-width:50%; }
+    .search input{
+      width:100%;
+      padding:10px 12px;
+      border-radius:999px;
+      border:none;
+      background:#23262a;
+      color:var(--text);
+      box-sizing:border-box;
+    }
+    .search input:focus{ outline:1px solid #2c2c2c; }
+
+    /* TOC container */
+    #card-container {
+      overflow:auto;
+      padding:12px;
+      flex:1;
+    }
+
+    /* chapter and file rows */
+    .toc-chapter {
+      margin: 8px 0 4px 0;
+      color:var(--accent);
+      font-weight:600;
+      cursor:pointer;
+    }
+    .toc-sub {
+      margin-left:12px;
+      padding:6px 8px;
+      border-radius:6px;
+      cursor:pointer;
+      color:var(--text);
+      text-decoration:none;
+      display:block;
+    }
+    .toc-sub:hover { background:#22262a; }
+    .toc-sub.collapsed { display:none; }
+
+    /* main view (iframe) */
+    .main-view {
+      flex:1;
+      height:100%;
+      background: #0b0c0f;
+      display:flex;
+      flex-direction:column;
+    }
+    .main-view iframe {
+      width:100%;
+      height:100%;
+      border:none;
+    }
+
+    /* responsive */
+    @media (max-width: 768px) {
+      #sidebar {
+        width: 100%;
+        height: 100vh;
+        max-height: none;
+      }
+      .layout {
+        flex-direction: column;
+        height: 100vh;
+      }
+      .main-view {
+        display: none; /* hide iframe container on mobile */
+      }
+      #card-container {
+        flex: 1;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+    }
+
+    /* slim scrollbars */
+    #card-container::-webkit-scrollbar, .main-view::-webkit-scrollbar { height:6px; width:6px; }
+    #card-container::-webkit-scrollbar-thumb { background:#30363d; border-radius:3px; }
+  </style>
+</head>
+
+<body>
+  <div class="layout">
+    <aside id="sidebar">
+      <div class="banner">
+        <h1 id="book-header" onclick="window.open('{{ REPO_URL }}', '_blank')">📘 {{ TITLE_NAME }}</h1>
+        <div class="search">
+          <input id="search-box" type="text" placeholder="Search Index ..." onkeyup="searchFiles()" />
+        </div>
+      </div>
+
+      <div id="card-container">
+{{ TOC_HTML }}
+      </div>
+    </aside>
+
+    <section class="main-view">
+      <iframe id="file-viewer" name="file-viewer" src="kbook.html?file={{ DEFAULT_INDEX }}" frameborder="0"></iframe>
+    </section>
+  </div>
+
+  <script>
+    // openFile: open into iframe on desktop, new tab on small screens or with Ctrl/Cmd click
+    function openFile(filePath, event) {
+      const url = "kbook.html?file=" + encodeURIComponent(filePath);
+
+      // If Ctrl (Windows/Linux) or Cmd (Mac) key is pressed → open in new tab
+      if (event && (event.ctrlKey || event.metaKey)) {
+        window.open(url, "_blank");
+        return;
+      }
+
+      if (window.innerWidth <= 768) {
+        // Mobile: always open in new tab
+        window.open(url, "_blank");
+      } else {
+        // Desktop: load in iframe
+        document.getElementById("file-viewer").src = url;
+      }
+    }
+
+    // showSubChapters: display subchapters in iframe content (desktop only)
+    function showSubChapters(chapterId, chapterTitle, chapterNum) {
+      if (window.innerWidth <= 768) return; // ignore on mobile
+
+      const subchapters = window.chapterMap?.[chapterId];
+      if (!subchapters) return;
+
+      const iframeDoc = document.getElementById("file-viewer").contentWindow.document;
+      iframeDoc.open();
+      let html = `
+        <html>
+        <head>
+          <style>
+            body { font-family: 'Roboto', sans-serif; background:#0d1117; color:#c9d1d9; padding:20px; }
+            h2 { color:#58a6ff; }
+            a { color:#c9d1d9; text-decoration:none; }
+            a:hover { text-decoration:underline; }
+          </style>
+        </head>
+        <body>
+          <h2>${chapterNum}. ${chapterTitle}</h2>
+      `;
+      if (!subchapters.length) {
+        html += "<p>No subchapters found.</p>";
+      } else {
+        html += "<ul>";
+        for (const item of subchapters) {
+          html += `<li><a href="#" onclick="parent.openFile('${item.path}');return false;">${item.index}. ${item.title}</a></li>`;
+        }
+        html += "</ul>";
+      }
+      html += "</body></html>";
+
+      iframeDoc.write(html);
+      iframeDoc.close();
+    }
+
+    // searchFiles: filters chapter headers and sub-items
+    function searchFiles() {
+      const q = document.getElementById('search-box').value.toLowerCase().trim();
+      const chapters = document.querySelectorAll('#card-container > .toc-chapter-block');
+
+      if (!q) {
+        chapters.forEach(ch => {
+          ch.style.display = '';
+          ch.querySelectorAll('.toc-sub').forEach(s => s.style.display = '');
+        });
+        return;
+      }
+
+      chapters.forEach(ch => {
+        const chapTitleEl = ch.querySelector('.toc-chapter');
+        const chapTitle = chapTitleEl ? chapTitleEl.textContent.toLowerCase() : '';
+        let chapterMatches = chapTitle.includes(q);
+        let anySubMatch = false;
+
+        ch.querySelectorAll('.toc-sub').forEach(sub => {
+          const txt = sub.textContent.toLowerCase();
+          if (txt.includes(q)) {
+            sub.style.display = '';
+            anySubMatch = true;
+          } else {
+            sub.style.display = 'none';
+          }
+        });
+
+        if (chapterMatches || anySubMatch) {
+          ch.style.display = '';
+        } else {
+          ch.style.display = 'none';
+        }
+      });
+    }
+  </script>
+</body>
+
+</html>

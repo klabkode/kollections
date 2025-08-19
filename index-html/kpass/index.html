@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Kpass</title>
+    <link rel="icon" href="favicon.ico" type="image/png">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="styles/index.css">
+    <link href='https://fonts.googleapis.com/css?family=Roboto' rel='stylesheet'>
+</head>
+
+<body>
+    <div class="container">
+        <div class="banner">
+            <h1>Klab Password Manager</h1>
+
+            <div class="search">
+                <input type="text" id="search-box" placeholder="Search passwords">
+            </div>
+
+            <div class="status-bar" id="statusBar">
+                <p id="statusMessage"></p>
+            </div>
+        </div>
+
+        <div id="card-container"></div>
+    </div>
+
+    <script src="scripts/index.js"></script>
+
+    <script>
+        // Attach event listener to the search input
+        document.getElementById('search-box').addEventListener('input', function (event) {
+            const query = event.target.value.trim(); // Get the current search query
+            if (query.length > 0) {
+                kpass_print("");
+                if (!kpass_grep_entry(query)) {
+                    document.getElementById('card-container').innerHTML = '';
+                }
+            } else {
+                /* If query is empty */
+                kpass_list_domain();
+            }
+        });
+
+        kpass_list_domain();
+    </script>
+</body>
+
+</html>

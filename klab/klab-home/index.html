@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="favicon.ico" type="image/png">
+    <title>Klab</title>
+    <style>
+        body {
+            color: #fff;
+            display: flex;
+            height: 100vh;
+            align-items: center;
+            flex-direction: column;
+            font-family: monospace;
+            background-color: #121212;
+        }
+
+        h1 {
+            margin: 50px;
+            color: lightgrey;
+        }
+
+        p {
+            color: grey;
+        }
+
+        .container {
+            text-align: center;
+        }
+
+        .search-bar {
+            width: 100%;
+            display: flex;
+            padding: 8px;
+            align-items: center;
+            border-radius: 20px;
+            background-color: #444;
+            box-sizing: border-box;
+        }
+
+        .search-bar input {
+            width: 45%;
+            color: #fff;
+            border: none;
+            outline: none;
+            font-size: 16px;
+            font-family: monospace;
+            background-color: transparent;
+        }
+
+        .search-bar input.ip-input {
+            width: 35%;
+        }
+
+        .search-bar input.address-bar {
+            width: 65%;
+            margin-left: 10px;
+        }
+
+        .ip-input {
+            margin: 0;
+        }
+
+        .vertical-divider {
+            width: 1px;
+            height: 25px;
+            background-color: #888;
+        }
+
+        .search-bar .address-bar {
+            margin-left: 10px;
+        }
+
+        .search-icon {
+            width: 32px;
+            height: 32px;
+            margin-left: 10px;
+            cursor: pointer;
+            transform: translateY(5px);
+        }
+
+        .button-container {
+            width: 100%;
+            display: flex;
+            max-width: 600px;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-around;
+        }
+
+        .button {
+            width: 75px;
+            height: 50px;
+            color: #fff;
+            border: none;
+            margin: 10px;
+            outline: none;
+            display: flex;
+            cursor: pointer;
+            font-size: 15px;
+            align-items: center;
+            border-radius: 15px;
+            background-color: #2c2c2e;
+            justify-content: center;
+        }
+
+        .error {
+            color: red;
+            font-size: 12px;
+            margin-top: 20px;
+        }
+
+        svg {
+            fill: white;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Konnekt</h1>
+
+        <div class="search-bar">
+            <input type="text" class="ip-input" id="hostip" value="localhost" placeholder="Host IP" />
+            <!-- Vertical divider between IP input and address input -->
+            <div class="vertical-divider"></div>
+            <input type="text" class="address-bar" id="address-bar" placeholder="Enter URL" />
+            <div class="search-icon" id="search-icon">
+                <!-- Inline SVG for search icon -->
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24px" height="24px">
+                    <path
+                        d="M 10 2 C 5.582 2 2 5.582 2 10 C 2 14.418 5.582 18 10 18 C 11.867188 18 13.582031 17.292969 14.855469 16.144531 L 19.292969 20.585938 L 20.707031 19.171875 L 16.269531 14.730469 C 17.417969 13.457031 18 11.742188 18 10 C 18 5.582 14.418 2 10 2 Z M 10 4 C 13.309 4 16 6.691 16 10 C 16 13.309 13.309 16 10 16 C 6.691 16 4 13.309 4 10 C 4 6.691 6.691 4 10 4 Z" />
+                </svg>
+            </div>
+        </div>
+
+        <p>Bookmarks</p>
+        <div class="button-container" id="bookmark-container">
+            <!-- Bookmark buttons will be dynamically added here -->
+        </div>
+
+        <p>Services</p>
+        <div class="button-container" id="port-container">
+            <!-- Port buttons will be dynamically added here -->
+        </div>
+
+        <div id="error-message" class="error"></div>
+    </div>
+
+    <script>
+        // Load key-value pairs for port services
+        function loadPorts() {
+            fetch('portmap.txt')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('File not found: portmap.txt');
+                    }
+                    return response.text();
+                })
+                .then(text => {
+                    renderMenu(text, 'port-container', true); // true for ports
+                })
+                .catch(error => {
+                    document.getElementById('error-message').innerText = error.message;
+                });
+        }
+
+        // Load key-value pairs for bookmarks
+        function loadBookmarks() {
+            fetch('bookmarks.txt')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('File not found: bookmarks.txt');
+                    }
+                    return response.text();
+                })
+                .then(text => {
+                    renderMenu(text, 'bookmark-container', false); // false for bookmarks
+                })
+                .catch(error => {
+                    document.getElementById('error-message').innerText = error.message;
+                });
+        }
+
+        // Function to process file content and create buttons
+        function renderMenu(content, containerId, isPort) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+            document.getElementById('error-message').innerText = '';
+
+            const lines = content.split('\n');
+            let hasButtons = false;
+
+            lines.forEach(line => {
+                const [key, value] = line.split('=');
+                if (key && value) {
+                    hasButtons = true;
+                    const button = document.createElement('button');
+                    button.className = 'button';
+                    button.innerText = key.trim();
+
+                    if (isPort) {
+                        // For services (ports)
+                        button.id = value.trim();
+                        button.addEventListener('click', () => {
+                            const ip = document.getElementById('hostip').value;
+                            const port = button.id.trim();
+                            if (ip && port) {
+                                const url = `http://${ip}:${port}/`;
+                                window.open(url, '_blank');
+                            } else {
+                                alert('IP address or port not selected properly.');
+                            }
+                        });
+                    } else {
+                        // For bookmarks, the value is the exact URL
+                        button.addEventListener('click', () => {
+                            const url = value.trim();
+                            window.open(url, '_blank');  // Open the URL directly
+                        });
+                    }
+
+                    container.appendChild(button);
+                }
+            });
+
+            if (!hasButtons) {
+                document.getElementById('error-message').innerText = `No valid entries found in ${isPort ? 'portmap.txt' : 'bookmarks.txt'}`;
+            }
+        }
+
+        // Open URL from address bar without appending host IP
+        function openAddressBarURL() {
+            let url = document.getElementById('address-bar').value.trim();
+
+            // If user does not provide protocol, prepend http://
+            if (!/^https?:\/\//i.test(url)) {
+                url = 'http://' + url;
+            }
+
+            window.open(url, '_blank');
+        }
+
+        // Call the functions to load and process files on page load
+        window.onload = function () {
+            loadPorts();
+            loadBookmarks();
+
+            // Handle search icon click
+            document.getElementById('search-icon').addEventListener('click', openAddressBarURL);
+
+            // Handle enter key press in the address bar
+            document.getElementById('address-bar').addEventListener('keypress', function (e) {
+                if (e.key === 'Enter') {
+                    openAddressBarURL();
+                }
+            });
+        };
+    </script>
+
+</body>
+
+</html>
+

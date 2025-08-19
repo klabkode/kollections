@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Kdeploy</title>
+  <link rel="icon" href="../../icons/favicon.ico" type="image/x-icon">
+  <style>
+    body {
+      font-family: sans-serif;
+      background-color: #eee;
+    }
+    h1 {
+      font-size: 32px;
+      margin-left: 5px;
+    }
+    #header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem;
+      background-color: #333;
+      color: white;
+    }
+    table{
+      margin-top: 10px;
+      width: 100%;
+      border-collapse: collapse;
+    }
+    th, td{
+      padding: 8px;
+      text-align: left;
+      border: 1px solid black;
+    }
+    th{
+      color: black;
+      font-weight: bold;
+      background-color: #ccc;
+    }
+    .first-column, .second-column{
+      color: blue;
+      width: 250px;
+      overflow-y: auto;
+      max-height: 85vh;
+      font-weight: bold;
+    }
+    .selected{
+      background-color: yellow;
+    }
+    .third-column{
+      flex: 1;
+      overflow-y: auto;
+      max-height: 85vh;
+    }
+    .row{
+      display: flex;
+      flex-wrap: wrap;
+    }
+    .col{
+      margin: 5px;
+    }
+    .no-underline {
+      text-decoration: none;
+    }
+    .icon {
+      width: 80px;
+      height: 80px;
+    }
+    .error {
+      color: red;
+      white-space: nowrap;
+      font-weight: normal;
+    }
+    .text {
+      color: black;
+      white-space: nowrap;
+      font-weight: normal;
+    }
+  </style>
+</head>
+<body>
+  <header id="header">
+    <h1>Khelp</h1>
+    <img class="icon" src="../../icons/vendor/khelp.png" alt="Icon">
+  </header>
+  <?php
+    $path = "tags";
+    if (is_link($path)) {
+      $target = readlink($path);
+      $path = $target;
+    }
+    if (!is_dir($path)) {
+      echo "<p class='error'>Oops! Invalid path '$path' (file doesn't exist)</p>";
+      exit;
+    }
+    $folders = scandir($path);
+    if (!$folders || count($folders) <= 2) {
+      echo "<p class='error' style='margin-left:10px;'>Oops! No tags found</p>
+            <p style='font-weight:bold;margin-left:10px'>Adding new tags:</p>
+            <ol class='text'>
+            - Add your tags at '<code>/var/www/html/klab/deployments/khelp/$path</code>'<br>
+            - The tag name should be a directory where the topics are located
+            </ol>
+            <p style='font-weight:bold;margin-left:10px'>Adding new tag entries:</p>
+            <ol class='text'>
+            - Add your tag entries at '<code>/var/www/html/klab/deployments/khelp/$path/tag-name</code>'<br>
+            - The tag entry file should be in plain text format
+            </ol><br><br>";
+      exit;
+    }
+  ?>
+  <div class="row">
+    <div class="col first-column">
+      <table>
+        <thead>
+          <tr>
+            <th>Topics</th>
+          </tr>
+        </thead>
+        <tbody>
+          <?php
+            foreach ($folders as $folder) {
+              if ($folder !== "." && $folder !== "..") {
+                if (is_dir($path."/".$folder)) {
+                  $selectedFolder = isset($_GET['folder']) && $_GET['folder'] == $folder;
+                  $folderName = $selectedFolder ? "<strong>$folder</strong>" : $folder;
+                  echo "<tr" . ($selectedFolder ? " style='background-color: #ccc;'" : "") . "><td><a href='?folder=$folder' class='no-underline'>$folderName</a></td></tr>";
+                }
+              }
+            }
+          ?>
+        </tbody>
+      </table>
+    </div>
+    <div class="col second-column">
+      <table>
+        <thead>
+          <tr>
+            <th><?php echo isset($_GET['folder']) ? "<strong>" . $_GET['folder'] . ":</strong>" : "Tag"; ?></th>
+          </tr>
+        </thead>
+        <tbody>
+          <?php
+            if (isset($_GET['folder'])) {
+              $folder = $_GET['folder'];
+              $files = scandir($path."/".$folder);
+              if (!$files || count($files) <= 2) {
+                echo "<td class='error'>No tags found in '$path/$folder'<br><br>
+                      - Add your tag entries at '<code>/var/www/html/klab/deployments/khelp/$path/$folder</code>'<br>
+                      - The tag entry file should be in plain text format</td>";
+                exit;
+              }
+              foreach ($files as $file) {
+                if ($file !== "." && $file !== "..") {
+                  $selectedFile = isset($_GET['file']) && $_GET['file'] == $file;
+                  $fileName = $selectedFile ? "<strong>$file</strong>" : $file;
+                  echo "<tr" . ($selectedFile ? " style='background-color: #ccc;'" : "") . "><td><a href='?folder=$folder&file=$file' class='no-underline' style='font-weight: normal;'>$fileName</a></td></tr>";
+                }
+              }
+            }
+          ?>
+        </tbody>
+      </table>
+    </div>
+    <div class="col third-column">
+      <table>
+        <thead>
+          <tr>
+            <th><?php echo isset($_GET['folder']) ? (isset($_GET['file']) && !empty($_GET['file']) ? "<strong><span style='color:blue'>" . $_GET['file'] . ":</span></strong>" : "Content") : "Content"; ?></th>
+          </tr>
+        </thead>
+        <tbody>
+          <?php
+            if (isset($_GET['folder']) && isset($_GET['file'])) {
+              $folder = $_GET['folder'];
+              $file = $_GET['file'];
+              $content = file_get_contents($path."/".$folder."/".$file);
+              echo "<tr><td><pre>$content</pre></td></tr>";
+            }
+          ?>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</body>
+</html>

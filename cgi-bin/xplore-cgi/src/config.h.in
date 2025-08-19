@@ -1,0 +1,7 @@
+#ifndef __XPLORE_CONFIG_H__
+#define __XPLORE_CONFIG_H__
+
+#define HTROOT   "@__HTROOT__@"
+#define HTCONFIG "@__HTCONFIG__@"
+
+#endif

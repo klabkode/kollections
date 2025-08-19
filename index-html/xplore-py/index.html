@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#317EFB">
+
+    <title>Xplore</title>
+
+    <!-- Icons and Manifest -->
+    <link rel="icon" href="favicon.ico" type="image/png">
+    <link rel="apple-touch-icon" href="/res/folder-icon.png">
+    <link rel="manifest" href="/manifest.json">
+
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css?family=Anta" rel="stylesheet">
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <div id="file-manager">
+        <header>
+            <div class="header">
+                <h1 style="font-family: 'Anta';font-size: 35px; font-weight: normal;">Xplore...</h1>
+                <div class="disk-usage">
+                    <div id="disk-usage"></div>
+                    <div id="dir-nitems"></div>
+                </div>
+            </div>
+        </header>
+
+        <div class="breadcrumb-container">
+            <nav class="breadcrumb" id="breadcrumb">
+                <!-- Breadcrumb path will be inserted here -->
+            </nav>
+        </div>
+        <div class="directory-list">
+            <!-- Dynamic content will be inserted here -->
+        </div>
+    </div>
+
+    <script src="scripts.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta http-equiv="Content-Style-Type" content="text/css">
+
+  <title>Ktree</title>
+
+  <link rel="stylesheet" type="text/css" href="res/style.css">
+  <link rel="stylesheet" type="text/css" href="res/js/jquery.treeview.css">
+  <link rel="icon" type="image/png" href="res/favicon.png">
+
+  <script src="res/js/jquery.js"></script>
+  <script src="res/js/jquery.treeview.js"></script>
+
+  <script>
+    function openFile(event, filePath) {
+      event.preventDefault();
+      console.log("[DEBUG] Opening file: " + filePath);
+      parent.frames["main"].location.href = "fileview.html?file=" + encodeURIComponent(filePath);
+    }
+
+    $(document).ready(function () {
+      $("#tree").treeview({
+        animated: "fast",
+        collapsed: true,
+        unique: false,
+        control: "#control"
+      });
+      $("#init").text(""); // Ensure this element exists in your HTML
+    });
+  </script>
+</head>
+
+<body>
+  <h2>Ktree:</h2>
+
+  <div id="control">
+    <a href="#">Collapse</a> | <a href="#">Expand</a>
+  </div>
+
+  <ul id="tree" class="filetree">
+    {file_tree}
+  </ul>
+</body>
+
+</html>
